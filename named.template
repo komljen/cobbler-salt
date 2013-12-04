@@ -1,0 +1,44 @@
+include "/etc/bind/rndc.key";
+include "/etc/bind/named.conf.local";
+include "/etc/bind/named.conf.default-zones";
+
+options {
+          listen-on port 53 { 192.168.100.150; };
+          directory       "/var/cache/bind";
+          dump-file       "/var/cache/bind/cache_dump.db";
+          statistics-file "/var/cache/bind/named_stats.txt";
+          memstatistics-file "/var/cache/bind/named_mem_stats.txt";
+          allow-query     { any; };
+          recursion yes;
+          forwarders { 8.8.8.8; 8.8.4.4; };
+};
+
+controls {
+        inet 192.168.100.150 port 953 allow { 192.168.100.150; } keys { "rndc-key"; };
+};
+
+logging {
+        channel default_debug {
+                file "/var/cache/bind/named.run";
+                severity dynamic;
+        };
+};
+
+#for $zone in $forward_zones
+zone "${zone}." {
+    type master;
+    file "/etc/bind/db.$zone";
+    allow-update { any; };
+    notify yes;
+};
+
+#end for
+#for $zone, $arpa in $reverse_zones
+zone "${arpa}." {
+    type master;
+    file "/etc/bind/db.$zone";
+    allow-update { any; };
+    notify yes;
+};
+
+#end for

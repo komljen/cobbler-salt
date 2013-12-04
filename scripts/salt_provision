@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Salt minion installation
+
+sleep 5
+
+apt-get -y install python-software-properties
+add-apt-repository -y ppa:saltstack/salt
+apt-get update
+apt-get -y install salt-minion
+
+sed -i -f - /etc/salt/minion <<EOF
+12 i \\
+master: $master \\
+#if $varExists('$roles')
+grains: \\
+  roles: \\
+#if isinstance($roles, str)
+    - $roles \\
+#else
+#for role in $roles
+    - $role \\
+#end for
+#end if
+#end if
+mine_functions: \\
+  network.ip_addrs: \\
+    - eth0 \\
+  network.interfaces: [] \\
+  test.ping: [] \\
+  grains.item: \\
+    - public_ips \\
+    - public_ip \\
+EOF
+
+service salt-minion restart
+update-rc.d -f salt_provision remove

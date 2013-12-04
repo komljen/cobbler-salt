@@ -1,0 +1,23 @@
+# Get salt_provision script
+wget -q -O /root/salt_provision http://$http_server/cblr/svc/op/script/system/$name/?script=salt_provision
+chmod +x /root/salt_provision
+
+# Create a service that will run salt_provision script
+cat <<EOF > /etc/init.d/salt_provision
+### BEGIN INIT INFO
+# Provides:        salt_provision
+# Required-Start:  $networking
+# Required-Stop:   $networking
+# Default-Start:   2 3 4 5
+# Default-Stop:    0 1 6
+# Short-Description: salt_provision script
+# Description: salt_provision script
+### END INIT INFO
+
+cd /root; /usr/bin/nohup sh -x /root/salt_provision &
+
+EOF
+
+# Install the salt_provision service
+chmod +x /etc/init.d/salt_provision
+update-rc.d salt_provision defaults
